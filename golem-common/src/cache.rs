@@ -27,6 +27,7 @@ use dashmap::DashMap;
 use tokio::task::JoinHandle;
 use tokio::time::Instant;
 use tracing::Instrument;
+use std::ops::AsyncFnOnce;
 
 use crate::metrics::caching::{
     record_cache_capacity, record_cache_eviction, record_cache_hit, record_cache_miss,
@@ -76,7 +77,9 @@ impl<
     where
         F: AsyncFnOnce() -> Result<V, E>,
     {
-        self.get_or_insert(key, || Ok(()), async |_| f().await)
+        self.get_or_insert(key, || Ok(()), async {
+            f().await
+        })
             .await
     }
 }
